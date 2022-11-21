@@ -19,7 +19,10 @@ import ListItemText from '@mui/material/ListItemText';
 import DownloadIcon from '@mui/icons-material/Download';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Copyright from '../src/Copyright';
-import Editor from '../src/Codemirror';
+import dynamic from 'next/dynamic'
+const Editor = dynamic(() => import('../src/Codemirror'), {
+  ssr:false,
+})
 import Grouped from './autocomplete';
 import { Grid } from '@mui/material';
 
