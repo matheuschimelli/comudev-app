@@ -4,6 +4,7 @@ import { dracula } from '@uiw/codemirror-theme-dracula';
 import { javascript } from '@codemirror/lang-javascript';
 import { useState, useEffect } from 'react';
 import { Grid } from '@mui/material';
+import io from 'socket.io-client'
 
 function Editor() {
   

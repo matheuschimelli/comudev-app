@@ -6,9 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { CacheProvider } from '@emotion/react';
 import theme from '../src/themes/theme';
 import createEmotionCache from '../src/createEmotionCache';
-import io from 'socket.io-client';
 
-const socket = io();
 const clientSideEmotionCache = createEmotionCache();
 
 export default function MyApp(props) {
