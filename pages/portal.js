@@ -1,129 +1,82 @@
-import * as React from 'react';
-import { Grid } from '@mui/material';
-import { Box } from '@mui/material';
-import Typography from '@mui/material/Typography';
+import { useState } from "react"
 import {
-    createTheme,
-    responsiveFontSizes,
-    ThemeProvider,
-  } from '@mui/material/styles';
-
-let theme = createTheme();
-theme = responsiveFontSizes(theme);
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import SendIcon from '@mui/icons-material/Send';
-import { useRef, useState} from 'react';
-import { useToast } from '@chakra-ui/react';
-import { useMutation } from 'react-query';
-import { useStore } from '../src/store';
-import axios from 'axios';
-
+  Center,
+  Box,
+  Text,
+  Input,
+  Button,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  useToast
+} from "@chakra-ui/react"
 export default function Portal() {
-  
-const inputRef = useRef();
-const roomIdRef = useRef();
-const toast = useToast();
-const [username, setUsername] = useState("")
-const [roomId, setRoomId] = useState("")
-  
-/*const { mutateAsync } = useMutation(({ username, roomId, uri }) => {
-      return axios.post(`http://localhost:3000/${uri}`, {
-        username,
-        roomId,
-    })
-})*/
-  
-const createRoom = async () => {
-  const value = inputRef.current?.value
 
-  if (!value) {
-    alert("usuario em branco")
+  const [username, setUsername] = useState("")
+  const [roomId, setRoomId] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const toast = useToast()
+
+  const handleUsernameInputChange = (event) => {
+    setUsername(event.target.value)
   }
-  const result = await fetch("/sua-sala", {
-    method: "POST",
-    data: {
-      username
-    }
-  })
-  const idSala = await result.json()
-  setRoomId(data.roomId)
-  setUsername(value)
-}
-  
-const enterRoom = async () => {
-    const value = inputRef.current?.value
-    const roomIdValue = roomIdRef.current?.value
-  
-    if (!value || !roomIdValue) {
-        toast({
-          title: 'Informe um id e nome válido',
-          status: 'error',
-          duration: 9000,
-          isClosable: true,
-        })
-        return
-      }
-      setRoomId(roomIdValue)
-      setUsername(value)
-    }
 
+  const handleRoomIdInputChange = (event) => {
+    setRoomId(event.target.value)
+  }
+
+  const handleOnSubmit = async (event) => {
+    event.preventDefault()
+    setIsLoading(true)
+
+    try {
+
+      const requestRoomId = await fetch("/api/room", {
+        method: "POST",
+        body: {
+          username,
+          roomId
+        }
+      })
+      const responseRoomId = requestRoomId.json()
+      alert(responseRoomId)
+      setIsLoading(false)
+
+    } catch (error) {
+      console.log(error)
+      setIsLoading(false)
+
+      return toast({
+        status: "error",
+        title: "Não foi possível iniciar uma sala",
+        description: "Pedimos desculpas. Mas não conseguimos iniciar uma sala. Tente mais tarde.",
+        isClosable: true
+      })
+
+    }
+  }
   return (
-        <Box>
-            <Box 
-                mt={20}
-                ml={5}
-                >
-                <ThemeProvider theme={theme}>
-                    <Typography variant="h1" color={'#fff'}>
-                        COMUDEV
-                    </Typography>
-                    <Typography variant="h5" color={'#fff'}>
-                        Para Comunidade Brasileira de Desenvolvimento Web
-                    </Typography>
-                </ThemeProvider>
-                <Box mt={5}>
-                <Grid container spacing={1}>
-                    
-                    <Grid item ={3}>
-                        <TextField
-                            required
-                            id="outlined-required"
-                            placeholder="Seu apelido"
-                            onChange={(e)=>setUsername(e.target.value)}
-                            ref={inputRef}
-                        />
-                    </Grid>
-                    
-                    <Grid item = {1}>
-                    <IconButton aria-label="send" color="primary" onClick={createRoom}>
-                        <SendIcon />
-                    </IconButton>
-                    </Grid>
-                    <Grid item = {8}></Grid>
-                </Grid>
-                </Box>
-                <Box mt={2}>
-                <Grid container spacing={1}>
-                    <Grid item ={3}>
-                        <TextField
-                            required
-                            id="id"
-                            placeholder="ID SALA"
-                            ref={roomIdRef}
-                            onChange={(e)=>setRoomId(e.target.value)}
-                        />
-                    </Grid>
-                    <Grid item = {1}>
-                    <IconButton aria-label="send" color="primary" onClick={enterRoom}>
-                        <SendIcon />
-                    </IconButton>
-                    </Grid>
-                    <Grid item = {8}></Grid>
-                </Grid>
-                </Box>
-            </Box>
+    <Center>
+      <Box shadow="md" display="flex" flexDir="column" gridGap="5" p="10" rounded="md" mt="20">
+        <Text as="h1" fontWeight="bold" fontSize="2xl">
+          ComuDEV
+        </Text>
+        <Text fontWeight="thin">Insira seu nome e o id de uma sala ou deixe em branco para criar uma nova sala.</Text>
+        <Box as="form" display="flex" flexDir="column" gridGap="3" onSubmit={handleOnSubmit}>
+          <FormControl>
+            <FormLabel>Seu nome</FormLabel>
+            <Input placeholder="Seu nome" name="username" onChange={handleUsernameInputChange} />
+          </FormControl>
+          <FormControl>
+            <FormLabel>ID da sala</FormLabel>
+            <Input placeholder="ID da sala" name="roomId" onChange={handleRoomIdInputChange} />
+            <FormHelperText>Deixe em branco para criar uma nova</FormHelperText>
+          </FormControl>
+          <Button colorScheme="teal" isLoading={isLoading} onClick={handleOnSubmit}>Começar!</Button>
+
         </Box>
-               
-  );
+      </Box>
+    </Center>
+
+  )
 }
