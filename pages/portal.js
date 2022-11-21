@@ -13,57 +13,43 @@ theme = responsiveFontSizes(theme);
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import SendIcon from '@mui/icons-material/Send';
-import{ useRef } from 'react';
+import { useRef, useState} from 'react';
 import { useToast } from '@chakra-ui/react';
 import { useMutation } from 'react-query';
 import { useStore } from '../src/store';
 import axios from 'axios';
 
+export default function Portal() {
+  
 const inputRef = useRef();
 const roomIdRef = useRef();
 const toast = useToast();
-
-const { setUsername, setRoomId } = useStore(({ setUsername, setRoomId }) => ({
-      setUsername,
-      setRoomId,
-}))
+const [username, setUsername] = useState("")
+const [roomId, setRoomId] = useState("")
   
-const { mutateAsync } = useMutation(({ username, roomId, uri }) => {
+/*const { mutateAsync } = useMutation(({ username, roomId, uri }) => {
       return axios.post(`http://localhost:3000/${uri}`, {
         username,
         roomId,
     })
-})
+})*/
   
 const createRoom = async () => {
-    const value = inputRef.current?.value
-  
-    if (!value) {
-        toast({
-          title: 'Please enter your username',
-          status: 'error',
-          duration: 9000,
-          isClosable: true,
-        })
-        return
-      }
-    await mutateAsync(
-        { username: value, uri: '/sua-sala' },
-        {
-          onSuccess: ({ data }) => {
-            setRoomId(data.roomId)
-            toast({
-              title: 'We created your username, you will find yourself in a room',
-              description: 'Share the room id with anyone',
-              status: 'success',
-              duration: 9000,
-              isClosable: true,
-            })
-          },
-        }
-      )
-      setUsername(value)
+  const value = inputRef.current?.value
+
+  if (!value) {
+    alert("usuario em branco")
+  }
+  const result = await fetch("/sua-sala", {
+    method: "POST",
+    data: {
+      username
     }
+  })
+  const idSala = await result.json()
+  setRoomId(data.roomId)
+  setUsername(value)
+}
   
 const enterRoom = async () => {
     const value = inputRef.current?.value
@@ -71,7 +57,7 @@ const enterRoom = async () => {
   
     if (!value || !roomIdValue) {
         toast({
-          title: 'Please enter text in both inputs',
+          title: 'Informe um id e nome válido',
           status: 'error',
           duration: 9000,
           isClosable: true,
@@ -82,8 +68,6 @@ const enterRoom = async () => {
       setUsername(value)
     }
 
-
-export default function Portal() {
   return (
         <Box>
             <Box 
@@ -105,7 +89,9 @@ export default function Portal() {
                         <TextField
                             required
                             id="outlined-required"
-                            defaultValue="Seu apelido"
+                            placeholder="Seu apelido"
+                            onChange={(e)=>setUsername(e.target.value)}
+                            ref={inputRef}
                         />
                     </Grid>
                     
@@ -123,7 +109,9 @@ export default function Portal() {
                         <TextField
                             required
                             id="id"
-                            label="ID SALA"
+                            placeholder="ID SALA"
+                            ref={roomIdRef}
+                            onChange={(e)=>setRoomId(e.target.value)}
                         />
                     </Grid>
                     <Grid item = {1}>
