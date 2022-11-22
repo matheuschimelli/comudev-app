@@ -63,37 +63,47 @@ nextApp.prepare().then(async () => {
   app.all('*', (req, res) => nextHandler(req, res));
 
   io.on('connection', (socket) => {
-
-    socket.on('DISSCONNECT_FROM_ROOM', async ({ roomId, username }) => {
-
+    socket.on('CODE_CHANGED', async (code) => {
+      const { roomId, username } = await redisClient.hGetAll(socket.id)
+      const roomName = `ROOM:${roomId}`
+      // io.emit('CODE_CHANGED', code)
+      socket.to(roomName).emit('CODE_CHANGED', code)
     })
 
-    socket.on('CONNECTED_TO_ROOM', async ({ roomId, username }) => {
-      await client.lPush(`${roomId}:users`, `${username}`)
-      await client.hSet(socket.id, { roomId, username })
+    socket.on('DISSCONNECT_FROM_ROOM', async ({ roomId, username }) => { })
 
-      const users = await client.lRange(`${roomId}:users`, 0, -1)
+    socket.on('CONNECTED_TO_ROOM', async ({ roomId, username }) => {
+      await redisClient.lPush(`${roomId}:users`, `${username}`)
+      await redisClient.hSet(socket.id, { roomId, username })
+
+      const users = await redisClient.lRange(`${roomId}:users`, 0, -1)
       const roomName = `ROOM:${roomId}`
+
       socket.join(roomName)
-      io.in(roomName).emit('ROOM:CONNECTION', users)
+      socket.to(roomName).emit('ROOM:CONNECTION', users)
     })
 
     socket.on('disconnect', async () => {
       // TODO if 2 users have the same name
-      const { roomId, username } = await client.hGetAll(socket.id)
-      const users = await client.lRange(`${roomId}:users`, 0, -1)
+      const { roomId, username } = await redisClient.hGetAll(socket.id)
+      const users = await redisClient.lRange(`${roomId}:users`, 0, -1)
       const newUsers = users.filter((user) => username !== user)
+
       if (newUsers.length) {
-        await client.del(`${roomId}:users`)
-        await client.lPush(`${roomId}:users`, newUsers)
+        await redisClient.del(`${roomId}:users`)
+        await redisClient.lPush(`${roomId}:users`, newUsers)
+
       } else {
-        await client.del(`${roomId}:users`)
+        await redisClient.del(`${roomId}:users`)
       }
+
       const roomName = `ROOM:${roomId}`
       io.in(roomName).emit('ROOM:CONNECTION', newUsers)
+
     })
 
-  })
+
+  });
 
   server.listen(port, () => {
     console.log(`> Ready on http://localhost:${port}`);
